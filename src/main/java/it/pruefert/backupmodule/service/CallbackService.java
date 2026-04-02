@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -23,8 +24,11 @@ public class CallbackService {
     @Value("${aethera.api-key:}")
     private String apiKey;
 
-    public CallbackService(RestClient.Builder builder) {
-        this.restClient = builder.build();
+    public CallbackService() {
+        var factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(10000);
+        this.restClient = RestClient.builder().requestFactory(factory).build();
     }
 
     public void notifyAethera(BackupJob job) {
