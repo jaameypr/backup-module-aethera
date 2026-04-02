@@ -10,11 +10,10 @@ RUN mvn package -DskipTests -B
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-RUN addgroup -S app && adduser -S app -G app
 COPY --from=build /app/target/*.jar app.jar
-RUN chown -R app:app /app
 
-USER app
+# Create mount points for bind mounts
+RUN mkdir -p /aethera/data /aethera/backups
 
 EXPOSE 8080
 
