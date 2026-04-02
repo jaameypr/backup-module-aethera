@@ -33,28 +33,39 @@ public class CallbackService {
         BackupCallback payload;
         if (job.getStatus() == BackupJob.Status.COMPLETED) {
             payload = BackupCallback.success(
-                    job.getJobId(), job.getServerId(),
+                    job.getJobId(), job.getBackupId(), job.getServerId(),
                     job.getFilename(), job.getPath(), job.getSize(),
                     job.getShareUrl(), job.getShareId()
             );
         } else {
-            payload = BackupCallback.failure(job.getJobId(), job.getServerId(), job.getError());
+            payload = BackupCallback.failure(job.getJobId(), job.getBackupId(), job.getServerId(), job.getError());
         }
 
-        try {
-            var request = restClient.post()
-                    .uri(url)
-                    .contentType(MediaType.APPLICATION_JSON);
+        int maxRetries = 3;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                if (attempt > 1) {
+                    Thread.sleep(1000L * attempt);
+                }
 
-            if (apiKey != null && !apiKey.isBlank()) {
-                request.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey);
+                var request = restClient.post()
+                        .uri(url)
+                        .contentType(MediaType.APPLICATION_JSON);
+
+                if (apiKey != null && !apiKey.isBlank()) {
+                    request.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey);
+                }
+
+                request.body(payload).retrieve().toBodilessEntity();
+
+                log.info("Callback sent to {} for job {} — status: {}", url, job.getJobId(), job.getStatus());
+                return;
+            } catch (Exception e) {
+                log.warn("Callback attempt {}/{} failed for job {}: {}", attempt, maxRetries, job.getJobId(), e.getMessage());
+                if (attempt == maxRetries) {
+                    log.error("Failed to send callback to {} for job {} after {} attempts", url, job.getJobId(), maxRetries);
+                }
             }
-
-            request.body(payload).retrieve().toBodilessEntity();
-
-            log.info("Callback sent to {} for job {} — status: {}", url, job.getJobId(), job.getStatus());
-        } catch (Exception e) {
-            log.error("Failed to send callback to {} for job {}: {}", url, job.getJobId(), e.getMessage());
         }
     }
 }

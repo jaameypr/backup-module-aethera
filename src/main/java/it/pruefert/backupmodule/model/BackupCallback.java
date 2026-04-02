@@ -2,6 +2,7 @@ package it.pruefert.backupmodule.model;
 
 public record BackupCallback(
         String jobId,
+        String backupId,
         String serverId,
         String status,
         String filename,
@@ -11,12 +12,12 @@ public record BackupCallback(
         String shareId,
         String error
 ) {
-    public static BackupCallback success(String jobId, String serverId, String filename,
+    public static BackupCallback success(String jobId, String backupId, String serverId, String filename,
                                          String path, long size, String shareUrl, String shareId) {
-        return new BackupCallback(jobId, serverId, "completed", filename, path, size, shareUrl, shareId, null);
+        return new BackupCallback(jobId, backupId, serverId, "completed", filename, path, size, shareUrl, shareId, null);
     }
 
-    public static BackupCallback failure(String jobId, String serverId, String error) {
-        return new BackupCallback(jobId, serverId, "failed", null, null, 0, null, null, error);
+    public static BackupCallback failure(String jobId, String backupId, String serverId, String error) {
+        return new BackupCallback(jobId, backupId, serverId, "failed", null, null, 0, null, null, error);
     }
 }

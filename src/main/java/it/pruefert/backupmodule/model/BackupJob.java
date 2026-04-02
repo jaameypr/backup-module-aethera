@@ -11,6 +11,7 @@ public class BackupJob {
     private final String serverId;
     private final String serverIdentifier;
     private final String serverName;
+    private final String backupId;
     private final List<String> components;
     private final String callbackUrl;
     private final String actorId;
@@ -29,6 +30,7 @@ public class BackupJob {
         this.serverId = request.serverId();
         this.serverIdentifier = request.serverIdentifier();
         this.serverName = request.serverName() != null ? request.serverName() : request.serverIdentifier();
+        this.backupId = request.backupId();
         this.components = request.components();
         this.callbackUrl = request.callbackUrl();
         this.actorId = request.actorId();
@@ -40,6 +42,7 @@ public class BackupJob {
     public String getServerId() { return serverId; }
     public String getServerIdentifier() { return serverIdentifier; }
     public String getServerName() { return serverName; }
+    public String getBackupId() { return backupId; }
     public List<String> getComponents() { return components; }
     public String getCallbackUrl() { return callbackUrl; }
     public String getActorId() { return actorId; }

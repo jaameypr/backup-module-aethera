@@ -8,6 +8,7 @@ public record BackupRequest(
         String serverName,
         List<String> components,
         String callbackUrl,
+        String backupId,
         String actorId
 ) {
     public BackupRequest {
