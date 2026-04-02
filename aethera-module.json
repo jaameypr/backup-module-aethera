@@ -1,0 +1,66 @@
+{
+  "id": "async-backups",
+  "name": "Async Backups",
+  "version": "1.0.0",
+  "description": "Asynchronous backup service — offloads tar.gz packing to a background Java process",
+  "author": "pruefertit",
+  "icon": "hard-drive",
+  "type": "docker",
+  "exposure": "internal",
+  "minAetheraVersion": "0.2.0",
+
+  "docker": {
+    "build": {
+      "repository": "https://github.com/jaameypr/backup-module-aethera.git",
+      "context": ".",
+      "dockerfile": "Dockerfile"
+    },
+    "port": 8080,
+    "healthCheck": "/actuator/health",
+    "volumes": {},
+    "resources": {
+      "memoryLimit": "512m"
+    }
+  },
+
+  "auth": {
+    "strategy": "none"
+  },
+
+  "sidebar": {
+    "section": "Module",
+    "items": []
+  },
+
+  "env": {
+    "auto": [
+      "AETHERA_DATA_DIR",
+      "AETHERA_BACKUP_DIR"
+    ],
+    "configurable": [
+      {
+        "key": "AETHERA_CALLBACK_URL",
+        "label": "Aethera Callback URL",
+        "default": "http://aethera-app:3000/api/backups/callback",
+        "required": true
+      },
+      {
+        "key": "PAPERVIEW_URL",
+        "label": "Paperview Internal URL (optional)",
+        "default": "",
+        "required": false
+      },
+      {
+        "key": "PAPERVIEW_API_KEY",
+        "label": "Paperview API Key (optional)",
+        "default": "",
+        "required": false,
+        "secret": true
+      }
+    ]
+  },
+
+  "permissions": [
+    { "name": "module.async-backups.*", "description": "Full access to async backup module" }
+  ]
+}

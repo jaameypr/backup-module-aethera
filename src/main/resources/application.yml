@@ -1,0 +1,34 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: aethera-backup-module
+  threads:
+    virtual:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Aethera integration
+aethera:
+  callback-url: ${AETHERA_CALLBACK_URL:http://aethera-app:3000/api/backups/callback}
+  api-key: ${AETHERA_API_KEY:}
+
+# Paperview integration (optional)
+paperview:
+  url: ${PAPERVIEW_URL:}
+  api-key: ${PAPERVIEW_API_KEY:}
+
+# Backup settings
+backup:
+  data-dir: ${AETHERA_DATA_DIR:/data/servers}
+  backup-dir: ${AETHERA_BACKUP_DIR:/data/backups}
+  max-concurrent-jobs: ${BACKUP_MAX_CONCURRENT:3}
