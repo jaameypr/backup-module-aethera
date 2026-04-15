@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/backups")
@@ -24,10 +25,18 @@ public class BackupController {
     /**
      * Accept a new backup job. Returns immediately with 202 Accepted.
      * The backup runs in the background and calls back to Aethera when done.
+     * Returns 409 Conflict if a backup is already active for the same server.
      */
     @PostMapping("/create")
-    public ResponseEntity<BackupResponse> createBackup(@RequestBody BackupRequest request) {
-        BackupJob job = backupService.submitJob(request);
+    public ResponseEntity<?> createBackup(@RequestBody BackupRequest request) {
+        Optional<BackupJob> jobOpt = backupService.submitJob(request);
+        if (jobOpt.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "A backup is already in progress for this server"));
+        }
+
+        BackupJob job = jobOpt.get();
         backupService.executeBackup(job);
 
         return ResponseEntity

@@ -39,6 +39,15 @@ public class BackupService {
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss-SSS'Z'").withZone(ZoneOffset.UTC);
 
     private final ConcurrentHashMap<String, BackupJob> jobs = new ConcurrentHashMap<>();
+
+    /**
+     * Tracks which server IDs currently have an active (running) backup job.
+     * Prevents more than one backup from running per server at a time.
+     * Aethera enforces this via a DB-level unique index; this set is a
+     * defence-in-depth layer inside the module itself.
+     */
+    private final Set<String> activeServerIds = ConcurrentHashMap.newKeySet();
+
     private final CallbackService callbackService;
     private final PaperviewService paperviewService;
 
@@ -53,12 +62,22 @@ public class BackupService {
         this.paperviewService = paperviewService;
     }
 
-    public BackupJob submitJob(BackupRequest request) {
+    /**
+     * Registers a new backup job for execution.
+     *
+     * @return an {@link Optional} containing the created job, or empty if a backup
+     *         is already active for the same server (caller should respond 409).
+     */
+    public Optional<BackupJob> submitJob(BackupRequest request) {
+        if (!activeServerIds.add(request.serverId())) {
+            log.warn("Rejected duplicate backup for server {} — job already active", request.serverId());
+            return Optional.empty();
+        }
         String jobId = UUID.randomUUID().toString();
         var job = new BackupJob(jobId, request);
         jobs.put(jobId, job);
         log.info("Job {} submitted for server {}", jobId, request.serverIdentifier());
-        return job;
+        return Optional.of(job);
     }
 
     public Optional<BackupJob> getJob(String jobId) {
@@ -118,6 +137,10 @@ public class BackupService {
             log.error("Job {} failed: {}", job.getJobId(), e.getMessage(), e);
 
             callbackService.notifyAethera(job);
+        } finally {
+            // Release the per-server lock regardless of outcome so future backups can proceed.
+            activeServerIds.remove(job.getServerId());
+            log.debug("Released backup lock for server {}", job.getServerId());
         }
     }
 
